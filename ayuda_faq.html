@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayuda y FAQ - Gestor de Permisos Databricks</title>
+    <!-- Fuentes de Google: Inter para texto -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Iconos de Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        /* Variables CSS para colores basados en un elegante tono rojo */
+        :root {
+            --primary-color: #B22222; /* Firebrick - Un rojo profundo y elegante */
+            --primary-dark-color: #8B0000; /* Dark Red - Tono más oscuro para hover */
+            --accent-color: #FFD700; /* Gold - Un contraste cálido */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f0f2f5; /* Un gris claro para el fondo */
+            --card-background: #ffffff;
+            --border-color: #e0e0e0;
+            --light-red-hover: #FCE7E7; /* Un rojo muy claro para hover de botones con borde */
+
+            /* Colores FAQ */
+            --faq-header-bg: #f9f9f9;
+            --faq-border-color: #e0e0e0;
+        }
+
+        /* Estilos globales y reseteos básicos */
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        /* Estilos de la barra de herramientas (Toolbar) */
+        .app-toolbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+
+        .app-title-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-title-link:hover {
+            opacity: 0.8;
+        }
+
+        .spacer {
+            flex: 1 1 auto;
+        }
+
+        .toolbar-button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            margin-left: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            text-decoration: none; /* Para los enlaces */
+        }
+
+        .toolbar-button:hover {
+            background-color: var(--primary-dark-color);
+        }
+
+        /* Área de contenido principal */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* Estilos de la tarjeta de la página */
+        .page-card {
+            max-width: 900px; /* Ancho ajustado para FAQ */
+            width: 100%;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: var(--card-background);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+        }
+
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .page-content-text {
+            font-size: 1.1rem;
+            color: var(--light-text-color);
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Estilos para la sección de FAQ */
+        .faq-section {
+            margin-top: 20px;
+        }
+        .faq-item {
+            background-color: #fcfcfc;
+            border: 1px solid var(--faq-border-color);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden; /* Para contener la sombra y bordes */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--faq-header-bg);
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--faq-border-color);
+            transition: background-color 0.2s ease;
+        }
+        .faq-question:hover {
+            background-color: #f0f0f0;
+        }
+        .faq-question .material-icons {
+            transition: transform 0.3s ease;
+        }
+        .faq-question.active .material-icons {
+            transform: rotate(180deg); /* Gira el icono cuando está activo */
+        }
+
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0; /* Oculto por defecto */
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            color: var(--text-color);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .faq-answer.active {
+            max-height: 200px; /* Suficiente para la respuesta, ajustar si es necesario */
+            padding: 15px 20px;
+        }
+        .faq-answer p {
+            margin: 0 0 10px 0;
+        }
+        .faq-answer p:last-child {
+            margin-bottom: 0;
+        }
+
+
+        /* Pie de página (Footer) */
+        .app-footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 16px;
+            margin-top: auto;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        /* Media queries para responsividad */
+        @media (max-width: 768px) {
+            .app-toolbar {
+                padding: 12px 16px;
+            }
+            .app-title-link {
+                font-size: 1.2rem;
+            }
+            .toolbar-button {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            .page-card {
+                margin: 20px auto;
+                padding: 20px;
+            }
+            .page-title {
+                font-size: 1.8rem;
+            }
+            .page-content-text {
+                font-size: 1rem;
+            }
+            .faq-question {
+                font-size: 1rem;
+                padding: 12px 15px;
+            }
+            .faq-answer {
+                font-size: 0.9rem;
+                padding: 0 15px;
+            }
+            .faq-answer.active {
+                padding: 12px 15px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .app-toolbar {
+                flex-direction: column;
+                height: auto;
+                padding-bottom: 10px;
+                align-items: flex-start;
+            }
+            .app-title-link {
+                margin-bottom: 10px;
+                align-self: center;
+            }
+            .spacer {
+                display: none;
+            }
+            .app-toolbar .nav-buttons {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                align-items: center;
+            }
+            .toolbar-button {
+                width: 90%;
+                margin: 5px auto;
+            }
+            .page-card {
+                margin: 15px auto;
+                padding: 15px;
+            }
+            .page-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-toolbar">
+        <a href="index.html" class="app-title-link">Gestor de Permisos Databricks</a>
+        <span class="spacer"></span>
+        <nav class="nav-buttons">
+            <a href="index.html" class="toolbar-button">Inicio</a>
+            <a href="solicitar_permiso.html" class="toolbar-button">Solicitar Permiso</a>
+            <a href="mis_peticiones.html" class="toolbar-button">Mis Peticiones</a>
+            <a href="aprobar_peticiones.html" class="toolbar-button">Aprobar Peticiones</a>
+            <a href="dashboard.html" class="toolbar-button">Panel de Control</a>
+            <a href="gestion_usuarios_grupos.html" class="toolbar-button">Gestión Usuarios/Grupos</a>
+            <a href="registro_auditoria.html" class="toolbar-button">Registro de Auditoría</a>
+            <a href="configuracion_sistema.html" class="toolbar-button">Configuración</a>
+            <a href="ayuda_faq.html" class="toolbar-button">Ayuda / FAQ</a>
+        </nav>
+    </header>
+
+    <main class="content-area">
+        <div class="page-card">
+            <h1 class="page-title">Ayuda y Preguntas Frecuentes (FAQ)</h1>
+            <div class="page-content-text">
+                <p>Encuentra respuestas a las preguntas más comunes sobre el uso del Gestor de Permisos de Databricks Unity Catalog.</p>
+                <p>Si no encuentras lo que buscas, no dudes en contactar al equipo de soporte.</p>
+            </div>
+
+            <div class="faq-section">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>¿Cómo puedo solicitar un nuevo permiso sobre una tabla?</span>
+                        <i class="material-icons">expand_more</i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Para solicitar un nuevo permiso, navega a la sección "Solicitar Permiso" desde la barra de navegación superior. Rellena los campos obligatorios como el nombre del catálogo, esquema y tabla, el tipo de permiso deseado y el usuario o grupo al que se le otorgará. Puedes añadir múltiples tablas a una misma solicitud.</p>
+                        <p>Asegúrate de proporcionar una justificación clara si es requerida.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>¿Dónde puedo ver el estado de mis peticiones?</span>
+                        <i class="material-icons">expand_more</i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Puedes consultar el estado de todas tus peticiones en la sección "Mis Peticiones". Allí encontrarás una tabla con el ID de la solicitud, el email del solicitante, el usuario/grupo afectado, las tablas involucradas, la fecha de solicitud y su estado actual (Pendiente, Aprobada, Rechazada). También puedes usar los filtros para buscar peticiones específicas.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>¿Qué tipos de permisos puedo solicitar?</span>
+                        <i class="material-icons">expand_more</i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Actualmente, el sistema soporta la solicitud de los siguientes tipos de permisos sobre tablas en Databricks Unity Catalog:</p>
+                        <ul>
+                            <li><strong>SELECT:</strong> Permite leer datos de la tabla.</li>
+                            <li><strong>INSERT:</strong> Permite añadir nuevas filas a la tabla.</li>
+                            <li><strong>UPDATE:</strong> Permite modificar filas existentes en la tabla.</li>
+                            <li><strong>DELETE:</strong> Permite eliminar filas de la tabla.</li>
+                            <li><strong>ALL PRIVILEGES:</strong> Otorga todos los permisos disponibles sobre la tabla.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Soy administrador, ¿cómo apruebo o rechazo una petición?</span>
+                        <i class="material-icons">expand_more</i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Como administrador, accede a la sección "Aprobar Peticiones". Verás una lista de todas las solicitudes pendientes. Puedes revisar los detalles de cada petición y usar los botones "Aprobar" o "Rechazar" para procesarlas individualmente. Para gestionar múltiples peticiones a la vez, puedes seleccionar los checkboxes correspondientes y usar el botón "Aprobar Seleccionadas".</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>¿Mis datos están seguros en Databricks Unity Catalog?</span>
+                        <i class="material-icons">expand_more</i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, Databricks Unity Catalog proporciona un modelo de gobernanza unificado para tus datos, asegurando un control de acceso centralizado y detallado. Esta aplicación facilita la gestión de esos permisos de forma eficiente, pero la seguridad subyacente de tus datos recae en la configuración y las características de Unity Catalog.</p>
+                        <p>Es importante seguir las mejores prácticas de seguridad, como rotar tokens de acceso y revisar periódicamente los permisos otorgados.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 Gestor de Permisos Databricks. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling; // El elemento siguiente es la respuesta
+                    const icon = question.querySelector('.material-icons');
+
+                    // Cierra otras preguntas si están abiertas (comportamiento de acordeón)
+                    faqQuestions.forEach(otherQuestion => {
+                        if (otherQuestion !== question && otherQuestion.classList.contains('active')) {
+                            otherQuestion.classList.remove('active');
+                            otherQuestion.nextElementSibling.classList.remove('active');
+                            otherQuestion.querySelector('.material-icons').style.transform = 'rotate(0deg)';
+                        }
+                    });
+
+                    // Alternar la clase 'active' para expandir/contraer
+                    question.classList.toggle('active');
+                    answer.classList.toggle('active');
+                    if (question.classList.contains('active')) {
+                        icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
