@@ -134,7 +134,7 @@
             z-index: 1;
         }
 
-        .form-input, .form-select {
+        .form-input, .form-select, .form-textarea {
             width: calc(100% - 30px); /* Ajuste por padding */
             padding: 14px 15px;
             border: 1px solid var(--input-border-color);
@@ -145,12 +145,18 @@
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
             outline: none; /* Elimina el contorno por defecto */
         }
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
 
         /* Mueve el label hacia arriba cuando el input tiene contenido o está en foco */
         .form-input:focus + .form-label,
         .form-input:not(:placeholder-shown):valid + .form-label, /* Añadido :valid para inputs */
         .form-select:focus + .form-label,
-        .form-select:valid + .form-label {
+        .form-select:valid + .form-label,
+        .form-textarea:focus + .form-label,
+        .form-textarea:not(:placeholder-shown):valid + .form-label { /* Añadido :valid para textareas */
             top: -10px;
             left: 10px;
             font-size: 0.75rem;
@@ -159,7 +165,8 @@
             z-index: 2;
         }
         /* Para inputs vacíos pero enfocados, que no tienen :placeholder-shown */
-        .form-input:focus + .form-label {
+        .form-input:focus + .form-label,
+        .form-textarea:focus + .form-label {
              top: -10px;
              left: 10px;
              font-size: 0.75rem;
@@ -169,7 +176,7 @@
         }
 
 
-        .form-input:focus, .form-select:focus {
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(178, 34, 34, 0.2);
         }
@@ -354,7 +361,7 @@
             .form-title {
                 font-size: 1.8rem;
             }
-            .form-input, .form-select {
+            .form-input, .form-select, .form-textarea {
                 padding: 12px 10px;
                 font-size: 0.9rem;
             }
@@ -365,7 +372,9 @@
             .form-input:focus + .form-label,
             .form-input:not(:placeholder-shown):valid + .form-label,
             .form-select:focus + .form-label,
-            .form-select:valid + .form-label {
+            .form-select:valid + .form-label,
+            .form-textarea:focus + .form-label,
+            .form-textarea:not(:placeholder-shown):valid + .form-label {
                 top: -8px;
                 left: 8px;
                 font-size: 0.65rem;
@@ -408,7 +417,7 @@
                 width: 90%;
                 margin: 5px auto;
             }
-            .form-card {
+            .page-card {
                 margin: 15px auto;
                 padding: 15px;
             }
@@ -443,6 +452,18 @@
                 <div class="form-group">
                     <input type="text" id="requested_for_user_or_group" class="form-input" placeholder=" " required>
                     <label for="requested_for_user_or_group" class="form-label">Usuario o Grupo al que Otorgar</label>
+                </div>
+
+                <!-- Nuevo campo: Justificación de la Solicitud -->
+                <div class="form-group">
+                    <textarea id="justification_text" class="form-textarea" placeholder=" " required></textarea>
+                    <label for="justification_text" class="form-label">Justificación de la Solicitud</label>
+                </div>
+
+                <!-- Nuevo campo: Fecha de Vencimiento del Permiso -->
+                <div class="form-group">
+                    <input type="date" id="expiration_date" class="form-input" placeholder=" ">
+                    <label for="expiration_date" class="form-label">Fecha de Vencimiento (opcional)</label>
                 </div>
 
                 <hr style="margin: 30px 0; border: none; border-top: 1px dashed var(--border-color);">
@@ -520,7 +541,7 @@
         let addedTables = [];
 
         // Elementos del DOM
-        const formInputs = document.querySelectorAll('.form-input, .form-select');
+        const formInputsAndTextareas = document.querySelectorAll('.form-input, .form-select, .form-textarea');
         const addCatalogInput = document.getElementById('add_catalog_name');
         const addSchemaInput = document.getElementById('add_schema_name');
         const addTableNameInput = document.getElementById('add_table_name');
@@ -530,13 +551,16 @@
         const sendRequestButton = document.getElementById('sendRequestButton');
         const requesterEmailInput = document.getElementById('requester_email');
         const requestedForUserOrGroupInput = document.getElementById('requested_for_user_or_group');
+        const justificationTextInput = document.getElementById('justification_text'); // Nuevo
+        const expirationDateInput = document.getElementById('expiration_date'); // Nuevo
 
         // Función para actualizar el estado del botón "Enviar Solicitud"
         function updateSendRequestButtonState() {
             sendRequestButton.disabled = addedTables.length === 0 ||
                                          requesterEmailInput.value.trim() === '' ||
-                                         !requesterEmailInput.checkValidity() || // Valida formato de email
-                                         requestedForUserOrGroupInput.value.trim() === '';
+                                         !requesterEmailInput.checkValidity() ||
+                                         requestedForUserOrGroupInput.value.trim() === '' ||
+                                         justificationTextInput.value.trim() === ''; // La justificación ahora es obligatoria
         }
 
         // Función para actualizar el estado del botón "Añadir Tabla"
@@ -591,16 +615,19 @@
                 addSchemaInput.value = '';
                 addTableNameInput.value = '';
                 addPermissionTypeSelect.value = ''; // Resetear select
-                // Disparar evento input para actualizar el floating label del select si es necesario
-                const event = new Event('input', { bubbles: true });
-                addCatalogInput.dispatchEvent(event);
-                addSchemaInput.dispatchEvent(event);
-                addTableNameInput.dispatchEvent(event);
-                addPermissionTypeSelect.dispatchEvent(event);
+
+                // Disparar evento 'blur' en los inputs para que las etiquetas flotantes vuelvan a su posición
+                // si el campo queda vacío
+                const inputsToResetLabels = [addCatalogInput, addSchemaInput, addTableNameInput, addPermissionTypeSelect];
+                inputsToResetLabels.forEach(input => {
+                    const event = new Event('blur', { bubbles: true });
+                    input.dispatchEvent(event);
+                });
+
 
                 updateAddTableButtonState(); // Deshabilita el botón si los campos están vacíos
             } else {
-                alert('Por favor, rellena todos los campos para añadir una tabla.'); // Usar modal en prod
+                alert('Por favor, rellena todos los campos de Catálogo, Esquema, Tabla y Tipo de Permiso para añadir una tabla.');
             }
         }
 
@@ -627,17 +654,25 @@
             input.addEventListener('change', updateAddTableButtonState); // Para el select
         });
 
-        [requesterEmailInput, requestedForUserOrGroupInput].forEach(input => {
+        [requesterEmailInput, requestedForUserOrGroupInput, justificationTextInput, expirationDateInput].forEach(input => {
             input.addEventListener('input', updateSendRequestButtonState);
             input.addEventListener('blur', updateSendRequestButtonState); // Para validación al salir del campo
+            if (input.type === 'email') { // Para asegurar validación de email al salir
+                input.addEventListener('blur', () => {
+                    if (!input.checkValidity()) {
+                        // Puedes añadir un mensaje de error visual aquí en lugar de alert
+                    }
+                });
+            }
         });
+
 
         // Manejar el envío del formulario principal
         document.getElementById('permissionRequestForm').addEventListener('submit', (event) => {
             event.preventDefault(); // Prevenir el envío por defecto
 
             if (addedTables.length === 0) {
-                alert('Por favor, añade al menos una tabla a la solicitud.'); // Usar modal en prod
+                alert('Por favor, añade al menos una tabla a la solicitud.');
                 return;
             }
 
@@ -646,26 +681,37 @@
                  return;
             }
 
+            // Validar que los campos principales no estén vacíos
+            if (requesterEmailInput.value.trim() === '' ||
+                requestedForUserOrGroupInput.value.trim() === '' ||
+                justificationTextInput.value.trim() === '') {
+                alert('Por favor, rellena todos los campos obligatorios (Email, Usuario/Grupo, Justificación).');
+                return;
+            }
+
+
             const finalRequest = {
                 requester_email: requesterEmailInput.value.trim(),
                 requested_for_user_or_group: requestedForUserOrGroupInput.value.trim(),
+                justification: justificationTextInput.value.trim(), // Nuevo campo
+                expiration_date: expirationDateInput.value.trim() || null, // Nuevo campo, null si vacío
                 tables: addedTables
             };
 
             console.log('Solicitud final a enviar:', finalRequest);
-            alert('Solicitud enviada (simulada)! Revisa la consola para ver los datos.'); // Usar modal en prod
+            alert('Solicitud enviada (simulada)! Revisa la consola para ver los datos.');
             // Aquí iría tu llamada AJAX/fetch al backend FastAPI
             // resetForm(); // Podrías querer resetear todo el formulario después de enviar
         });
 
         // --- Script para el efecto "floating label" en inputs y selects ---
         function initializeFloatingLabels() {
-            formInputs.forEach(input => {
+            formInputsAndTextareas.forEach(input => {
                 const updateLabel = () => {
                     const label = document.querySelector(`label[for="${input.id}"]`);
                     if (label) {
                         // Comprueba si el input tiene valor, o si es un select y tiene una opción seleccionada (no disabled selected)
-                        // o si el input está en foco
+                        // o si el input/textarea está en foco
                         if (input.value.trim() !== '' || (input.tagName === 'SELECT' && input.value !== '') || input === document.activeElement) {
                             label.classList.add('active');
                         } else {
