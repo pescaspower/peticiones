@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Permisos - Gestor de Permisos Databricks</title>
+    <!-- Fuentes de Google: Inter para texto -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Iconos de Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        /* Variables CSS para colores basados en un elegante tono rojo */
+        :root {
+            --primary-color: #B22222; /* Firebrick - Un rojo profundo y elegante */
+            --primary-dark-color: #8B0000; /* Dark Red - Tono más oscuro para hover */
+            --accent-color: #FFD700; /* Gold - Un contraste cálido */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f0f2f5; /* Un gris claro para el fondo */
+            --card-background: #ffffff;
+            --border-color: #e0e0e0;
+            --light-red-hover: #FCE7E7; /* Un rojo muy claro para hover de botones con borde */
+            --input-border-color: #bdbdbd; /* Gris para bordes de input */
+            --input-focus-color: #B22222; /* Cambiado a primary-color para coherencia */
+            --input-label-color: #757575; /* Gris para las etiquetas */
+        }
+
+        /* Estilos globales y reseteos básicos */
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        /* Estilos de la barra de herramientas (Toolbar) */
+        .app-toolbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+
+        .app-title-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-title-link:hover {
+            opacity: 0.8;
+        }
+
+        .spacer {
+            flex: 1 1 auto;
+        }
+
+        .toolbar-button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            margin-left: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            text-decoration: none; /* Para los enlaces */
+        }
+
+        .toolbar-button:hover {
+            background-color: var(--primary-dark-color);
+        }
+
+        /* Área de contenido principal */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* Estilos de la tarjeta del formulario */
+        .form-card {
+            max-width: 800px; /* Ancho un poco mayor para la tabla */
+            width: 100%;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: var(--card-background);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+        }
+
+        .form-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative; /* Para el efecto de label */
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--input-label-color);
+            font-weight: 500;
+            transition: all 0.2s ease-out;
+            position: absolute;
+            left: 15px;
+            top: 14px;
+            pointer-events: none;
+            background: var(--card-background);
+            padding: 0 5px;
+            z-index: 1;
+        }
+
+        .form-input, .form-select {
+            width: calc(100% - 30px); /* Ajuste por padding */
+            padding: 14px 15px;
+            border: 1px solid var(--input-border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: var(--card-background);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            outline: none; /* Elimina el contorno por defecto */
+        }
+
+        /* Mueve el label hacia arriba cuando el input tiene contenido o está en foco */
+        .form-input:focus + .form-label,
+        .form-input:not(:placeholder-shown):valid + .form-label, /* Añadido :valid para inputs */
+        .form-select:focus + .form-label,
+        .form-select:valid + .form-label {
+            top: -10px;
+            left: 10px;
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            z-index: 2;
+        }
+        /* Para inputs vacíos pero enfocados, que no tienen :placeholder-shown */
+        .form-input:focus + .form-label {
+             top: -10px;
+             left: 10px;
+             font-size: 0.75rem;
+             color: var(--primary-color);
+             font-weight: 600;
+             z-index: 2;
+        }
+
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(178, 34, 34, 0.2);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23B22222%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27/%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        /* Sección de añadir tabla */
+        .table-add-section {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            background-color: #fcfcfc;
+        }
+
+        .table-add-section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .table-add-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .add-table-button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-table-button:hover {
+            background-color: var(--primary-dark-color);
+            transform: translateY(-1px);
+        }
+
+        .add-table-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Sección de tablas añadidas */
+        .added-tables-list-container {
+            margin-top: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden; /* Para que los bordes redondeados se apliquen a la tabla */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .added-tables-list-container h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .added-tables-list-container table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .added-tables-list-container th,
+        .added-tables-list-container td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .added-tables-list-container th {
+            background-color: #f5f5f5;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+
+        .added-tables-list-container td {
+            font-size: 0.95rem;
+            color: var(--light-text-color);
+        }
+
+        .added-tables-list-container tr:last-child td {
+            border-bottom: none;
+        }
+
+        .added-tables-list-container .remove-button {
+            background: none;
+            border: none;
+            color: #f44336; /* Rojo para eliminar */
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.2s ease;
+        }
+
+        .added-tables-list-container .remove-button:hover {
+            color: #d32f2f; /* Rojo más oscuro al pasar el ratón */
+        }
+
+        .submit-button-container {
+            text-align: right;
+            margin-top: 30px;
+        }
+
+        .submit-button {
+            padding: 14px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-button:hover {
+            background-color: var(--primary-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Pie de página (Footer) */
+        .app-footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 16px;
+            margin-top: auto;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        /* Media queries para responsividad */
+        @media (max-width: 768px) {
+            .app-toolbar {
+                padding: 12px 16px;
+            }
+            .app-title-link {
+                font-size: 1.2rem;
+            }
+            .toolbar-button {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            .form-card {
+                margin: 20px auto;
+                padding: 20px;
+            }
+            .form-title {
+                font-size: 1.8rem;
+            }
+            .form-input, .form-select {
+                padding: 12px 10px;
+                font-size: 0.9rem;
+            }
+            .form-label {
+                top: 12px;
+                left: 10px;
+            }
+            .form-input:focus + .form-label,
+            .form-input:not(:placeholder-shown):valid + .form-label,
+            .form-select:focus + .form-label,
+            .form-select:valid + .form-label {
+                top: -8px;
+                left: 8px;
+                font-size: 0.65rem;
+            }
+            .submit-button {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+            .table-add-fields {
+                grid-template-columns: 1fr; /* Apila los campos en móviles */
+            }
+            .added-tables-list-container th,
+            .added-tables-list-container td {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .app-toolbar {
+                flex-direction: column;
+                height: auto;
+                padding-bottom: 10px;
+                align-items: flex-start;
+            }
+            .app-title-link {
+                margin-bottom: 10px;
+                align-self: center;
+            }
+            .spacer {
+                display: none;
+            }
+            .app-toolbar .nav-buttons {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                align-items: center;
+            }
+            .toolbar-button {
+                width: 90%;
+                margin: 5px auto;
+            }
+            .form-card {
+                margin: 15px auto;
+                padding: 15px;
+            }
+            .form-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-toolbar">
+        <a href="index.html" class="app-title-link">Gestor de Permisos Databricks</a>
+        <span class="spacer"></span>
+        <nav class="nav-buttons">
+            <a href="index.html" class="toolbar-button">Inicio</a>
+            <a href="solicitar_permiso.html" class="toolbar-button">Solicitar Permiso</a>
+            <a href="mis_peticiones.html" class="toolbar-button">Mis Peticiones</a>
+            <a href="aprobar_peticiones.html" class="toolbar-button">Aprobar Peticiones</a>
+        </nav>
+    </header>
+
+    <main class="content-area">
+        <div class="form-card">
+            <h1 class="form-title">Solicitar Permisos sobre Tablas</h1>
+            <form id="permissionRequestForm">
+                <!-- Campos generales de la solicitud -->
+                <div class="form-group">
+                    <input type="email" id="requester_email" class="form-input" placeholder=" " required>
+                    <label for="requester_email" class="form-label">Email del Solicitante</label>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="requested_for_user_or_group" class="form-input" placeholder=" " required>
+                    <label for="requested_for_user_or_group" class="form-label">Usuario o Grupo al que Otorgar</label>
+                </div>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px dashed var(--border-color);">
+
+                <!-- Sección para añadir tablas individualmente -->
+                <div class="table-add-section">
+                    <h2>Añadir Tablas a la Solicitud</h2>
+                    <div class="table-add-fields">
+                        <div class="form-group">
+                            <input type="text" id="add_catalog_name" class="form-input" placeholder=" " required>
+                            <label for="add_catalog_name" class="form-label">Catálogo</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="add_schema_name" class="form-input" placeholder=" " required>
+                            <label for="add_schema_name" class="form-label">Esquema</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="add_table_name" class="form-input" placeholder=" " required>
+                            <label for="add_table_name" class="form-label">Tabla</label>
+                        </div>
+                        <div class="form-group">
+                            <select id="add_permission_type" class="form-select" required>
+                                <option value="" disabled selected>Tipo de permiso</option>
+                                <option value="SELECT">SELECT</option>
+                                <option value="INSERT">INSERT</option>
+                                <option value="UPDATE">UPDATE</option>
+                                <option value="DELETE">DELETE</option>
+                                <option value="ALL_PRIVILEGES">ALL PRIVILEGES</option>
+                            </select>
+                            <label for="add_permission_type" class="form-label">Tipo de Permiso</label>
+                        </div>
+                    </div>
+                    <button type="button" id="addTableButton" class="add-table-button">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 5px;">add</i> Añadir Tabla
+                    </button>
+                </div>
+
+                <!-- Tabla con las tablas añadidas -->
+                <div class="added-tables-list-container">
+                    <h2>Tablas Añadidas</h2>
+                    <table id="addedTablesList">
+                        <thead>
+                            <tr>
+                                <th>Catálogo</th>
+                                <th>Esquema</th>
+                                <th>Tabla</th>
+                                <th>Permiso</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Las filas se insertarán aquí con JavaScript -->
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--light-text-color);">No hay tablas añadidas aún.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="submit-button-container">
+                    <button type="submit" id="sendRequestButton" class="submit-button" disabled>
+                        Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 Gestor de Permisos Databricks. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // Array para almacenar las tablas que se van añadiendo
+        let addedTables = [];
+
+        // Elementos del DOM
+        const formInputs = document.querySelectorAll('.form-input, .form-select');
+        const addCatalogInput = document.getElementById('add_catalog_name');
+        const addSchemaInput = document.getElementById('add_schema_name');
+        const addTableNameInput = document.getElementById('add_table_name');
+        const addPermissionTypeSelect = document.getElementById('add_permission_type');
+        const addTableButton = document.getElementById('addTableButton');
+        const addedTablesListBody = document.querySelector('#addedTablesList tbody');
+        const sendRequestButton = document.getElementById('sendRequestButton');
+        const requesterEmailInput = document.getElementById('requester_email');
+        const requestedForUserOrGroupInput = document.getElementById('requested_for_user_or_group');
+
+        // Función para actualizar el estado del botón "Enviar Solicitud"
+        function updateSendRequestButtonState() {
+            sendRequestButton.disabled = addedTables.length === 0 ||
+                                         requesterEmailInput.value.trim() === '' ||
+                                         !requesterEmailInput.checkValidity() || // Valida formato de email
+                                         requestedForUserOrGroupInput.value.trim() === '';
+        }
+
+        // Función para actualizar el estado del botón "Añadir Tabla"
+        function updateAddTableButtonState() {
+            addTableButton.disabled = addCatalogInput.value.trim() === '' ||
+                                      addSchemaInput.value.trim() === '' ||
+                                      addTableNameInput.value.trim() === '' ||
+                                      addPermissionTypeSelect.value.trim() === '';
+        }
+
+        // Función para renderizar las tablas añadidas en la lista
+        function renderAddedTables() {
+            addedTablesListBody.innerHTML = ''; // Limpiar la lista actual
+
+            if (addedTables.length === 0) {
+                const noTablesRow = document.createElement('tr');
+                noTablesRow.innerHTML = `<td colspan="5" style="text-align: center; color: var(--light-text-color); padding: 20px;">No hay tablas añadidas aún.</td>`;
+                addedTablesListBody.appendChild(noTablesRow);
+            } else {
+                addedTables.forEach((table, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${table.catalog}</td>
+                        <td>${table.schema}</td>
+                        <td>${table.table}</td>
+                        <td>${table.permission}</td>
+                        <td>
+                            <button type="button" class="remove-button" data-index="${index}" title="Eliminar tabla">
+                                <i class="material-icons">delete</i>
+                            </button>
+                        </td>
+                    `;
+                    addedTablesListBody.appendChild(row);
+                });
+            }
+            updateSendRequestButtonState(); // Actualiza el botón de enviar cada vez que cambia la lista
+        }
+
+        // Función para añadir una tabla a la solicitud
+        function addTable() {
+            const catalog = addCatalogInput.value.trim();
+            const schema = addSchemaInput.value.trim();
+            const table = addTableNameInput.value.trim();
+            const permission = addPermissionTypeSelect.value.trim();
+
+            if (catalog && schema && table && permission) {
+                addedTables.push({ catalog, schema, table, permission });
+                renderAddedTables();
+
+                // Limpiar campos de añadir tabla
+                addCatalogInput.value = '';
+                addSchemaInput.value = '';
+                addTableNameInput.value = '';
+                addPermissionTypeSelect.value = ''; // Resetear select
+                // Disparar evento input para actualizar el floating label del select si es necesario
+                const event = new Event('input', { bubbles: true });
+                addCatalogInput.dispatchEvent(event);
+                addSchemaInput.dispatchEvent(event);
+                addTableNameInput.dispatchEvent(event);
+                addPermissionTypeSelect.dispatchEvent(event);
+
+                updateAddTableButtonState(); // Deshabilita el botón si los campos están vacíos
+            } else {
+                alert('Por favor, rellena todos los campos para añadir una tabla.'); // Usar modal en prod
+            }
+        }
+
+        // Función para eliminar una tabla de la solicitud
+        function removeTable(index) {
+            addedTables.splice(index, 1);
+            renderAddedTables();
+        }
+
+        // Event Listeners
+        addTableButton.addEventListener('click', addTable);
+
+        addedTablesListBody.addEventListener('click', (event) => {
+            if (event.target.closest('.remove-button')) {
+                const button = event.target.closest('.remove-button');
+                const index = parseInt(button.dataset.index);
+                removeTable(index);
+            }
+        });
+
+        // Event Listeners para actualizar el estado de los botones mientras se escribe
+        [addCatalogInput, addSchemaInput, addTableNameInput, addPermissionTypeSelect].forEach(input => {
+            input.addEventListener('input', updateAddTableButtonState);
+            input.addEventListener('change', updateAddTableButtonState); // Para el select
+        });
+
+        [requesterEmailInput, requestedForUserOrGroupInput].forEach(input => {
+            input.addEventListener('input', updateSendRequestButtonState);
+            input.addEventListener('blur', updateSendRequestButtonState); // Para validación al salir del campo
+        });
+
+        // Manejar el envío del formulario principal
+        document.getElementById('permissionRequestForm').addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevenir el envío por defecto
+
+            if (addedTables.length === 0) {
+                alert('Por favor, añade al menos una tabla a la solicitud.'); // Usar modal en prod
+                return;
+            }
+
+            if (!requesterEmailInput.checkValidity()) {
+                 alert('Por favor, introduce un email de solicitante válido.');
+                 return;
+            }
+
+            const finalRequest = {
+                requester_email: requesterEmailInput.value.trim(),
+                requested_for_user_or_group: requestedForUserOrGroupInput.value.trim(),
+                tables: addedTables
+            };
+
+            console.log('Solicitud final a enviar:', finalRequest);
+            alert('Solicitud enviada (simulada)! Revisa la consola para ver los datos.'); // Usar modal en prod
+            // Aquí iría tu llamada AJAX/fetch al backend FastAPI
+            // resetForm(); // Podrías querer resetear todo el formulario después de enviar
+        });
+
+        // --- Script para el efecto "floating label" en inputs y selects ---
+        function initializeFloatingLabels() {
+            formInputs.forEach(input => {
+                const updateLabel = () => {
+                    const label = document.querySelector(`label[for="${input.id}"]`);
+                    if (label) {
+                        // Comprueba si el input tiene valor, o si es un select y tiene una opción seleccionada (no disabled selected)
+                        // o si el input está en foco
+                        if (input.value.trim() !== '' || (input.tagName === 'SELECT' && input.value !== '') || input === document.activeElement) {
+                            label.classList.add('active');
+                        } else {
+                            label.classList.remove('active');
+                        }
+                    }
+                };
+
+                input.addEventListener('focus', updateLabel);
+                input.addEventListener('blur', updateLabel);
+                input.addEventListener('input', updateLabel);
+                if (input.tagName === 'SELECT') {
+                    input.addEventListener('change', updateLabel);
+                }
+                updateLabel(); // Ejecutar al cargar para pre-establecer etiquetas
+            });
+        }
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFloatingLabels();
+            renderAddedTables(); // Renderiza la tabla de inicio vacía
+            updateAddTableButtonState(); // Inicializa el estado del botón Añadir Tabla
+            updateSendRequestButtonState(); // Inicializa el estado del botón Enviar Solicitud
+        });
+    </script>
+</body>
+</html>
